@@ -40,7 +40,7 @@ func getTrainingData() trainingDataset {
 				"How are you",
 				"How's going",
 				"How's your day",
-				"Everything okay",
+				"Everything is okay",
 			},
 		},
 
