@@ -8,9 +8,8 @@ import (
 )
 
 type ParsedToken struct {
-	Text string
-	Stem string
-	Tag  string
+	Value string
+	Tag   string
 }
 type ParsedSentence struct {
 	Text   string
@@ -29,14 +28,21 @@ func Transform(text string) ParsedSentence {
 
 	for _, token := range doc.Tokens() {
 		tokens = append(tokens, ParsedToken{
-			Text: token.Text,
-			Stem: stemmer.Stem(token.Text),
-			Tag:  token.Tag,
+			Value: getTokenValue(token.Text, token.Tag),
+			Tag:   token.Tag,
 		})
 	}
 
 	return ParsedSentence{
 		Text:   text,
 		Tokens: tokens,
+	}
+}
+
+func getTokenValue(tText string, tTag string) string {
+	if strings.Contains(tTag, "VB") {
+		return stemmer.Stem(tText)
+	} else {
+		return tText
 	}
 }

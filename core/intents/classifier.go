@@ -18,7 +18,7 @@ func getFeatures(sentence string) []float64 {
 	features := make([]float64, len(wordBag))
 	for _, token := range parser.Transform(sentence).Tokens {
 		for word, wordIndex := range wordBag {
-			if word == token.Text {
+			if word == token.Value {
 				features[wordIndex] = 1
 				break
 			}
@@ -60,8 +60,8 @@ func initWordBag(training trainingDataset) {
 		for _, intentData := range training {
 			for _, sentence := range intentData.sentences {
 				for _, token := range parser.Transform(sentence).Tokens {
-					if _, ok := wordBag[token.Stem]; !ok {
-						wordBag[token.Stem] = len(wordBag)
+					if _, ok := wordBag[token.Value]; !ok {
+						wordBag[token.Value] = len(wordBag)
 					}
 				}
 			}
