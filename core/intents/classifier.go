@@ -4,29 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 
 	"github.com/dominik-zeglen/geralt/parser"
 	"github.com/goml/gobrain"
 )
 
-var cls gobrain.FeedForward
-var wordBag map[string]int
-
-func getFeatures(sentence string) []float64 {
-	features := make([]float64, len(wordBag))
-	for _, token := range parser.Transform(sentence).Tokens {
-		for word, wordIndex := range wordBag {
-			if word == token.Value {
-				features[wordIndex] = 1
-				break
-			}
-		}
-	}
-
-	return features
-}
+const bagOfWordsFilename = "word-bag.json"
 
 func getClass(intent int) []float64 {
 	classes := make([]float64, 13)
@@ -49,29 +33,6 @@ func getPredictedClass(output []float64) int {
 	return maxIndex
 }
 
-func initWordBag(training trainingDataset) {
-	log.Println("Init word bag")
-
-	saved, err := ioutil.ReadFile("word-bag.json")
-	if err == nil {
-		json.Unmarshal(saved, &wordBag)
-	} else {
-		wordBag = map[string]int{}
-		for _, intentData := range training {
-			for _, sentence := range intentData.sentences {
-				for _, token := range parser.Transform(sentence).Tokens {
-					if _, ok := wordBag[token.Value]; !ok {
-						wordBag[token.Value] = len(wordBag)
-					}
-				}
-			}
-		}
-
-		jsonData, _ := json.Marshal(&wordBag)
-		ioutil.WriteFile("word-bag.json", jsonData, 0644)
-	}
-}
-
 func validate(cls gobrain.FeedForward, input [][][]float64) {
 	predictions := make([]bool, len(input))
 
@@ -90,37 +51,87 @@ func validate(cls gobrain.FeedForward, input [][][]float64) {
 	fmt.Println(sum / float64(len(predictions)))
 }
 
-func initCls(training trainingDataset) {
-	log.Println("Init classifier")
-	cls.Init(len(wordBag), len(wordBag)/2, 13)
-	input := make([][][]float64, training.count())
+func init() {
+	rand.Seed(0)
+}
+
+func (predictor *IntentPredictor) initBagOfWords(training trainingDataset) {
+	saved, err := ioutil.ReadFile(bagOfWordsFilename)
+	if err == nil {
+		json.Unmarshal(saved, &predictor.bagOfWords)
+	}
+
+	predictor.bagOfWords = map[string]int{}
+	for _, intentData := range training {
+		predictor.intents = append(predictor.intents, intentData.intent)
+		if err != nil {
+			for _, sentence := range intentData.sentences {
+				for _, token := range parser.Transform(sentence).Tokens {
+					if _, ok := predictor.bagOfWords[token.Value]; !ok {
+						predictor.bagOfWords[token.Value] = len(predictor.bagOfWords)
+					}
+				}
+			}
+		}
+	}
+
+	if err != nil {
+		jsonData, _ := json.Marshal(&predictor.bagOfWords)
+		ioutil.WriteFile(bagOfWordsFilename, jsonData, 0644)
+	}
+}
+
+func (predictor *IntentPredictor) learn(trainingData trainingDataset) {
+	predictor.classifier.Init(
+		len(predictor.bagOfWords),
+		len(predictor.bagOfWords)/2,
+		13,
+	)
+	input := make([][][]float64, trainingData.count())
 
 	inputIndex := 0
-	for intentIndex, intentSet := range training {
+	for intentIndex, intentSet := range trainingData {
 		for _, sentence := range intentSet.sentences {
-			input[inputIndex] = [][]float64{getFeatures(sentence), getClass(intentIndex)}
+			input[inputIndex] = [][]float64{
+				predictor.getFeatures(sentence),
+				getClass(intentIndex),
+			}
 			inputIndex++
 		}
 	}
 
 	rand.Shuffle(len(input), func(i, j int) { input[i], input[j] = input[j], input[i] })
-	cls.Train(input, 1000, 0.2, 0.4, false)
-	validate(cls, input)
+	predictor.classifier.Train(input, 1000, 0.2, 0.4, false)
 }
 
-func init() {
-	rand.Seed(0)
-
-	td := getTrainingData()
-
-	initWordBag(td)
-	initCls(td)
-}
-
-func Reply(text string) {
-	pred := cls.Update(getFeatures(text))
-	fmt.Printf("Decision: %s\n", getTrainingData()[getPredictedClass(pred)].intent)
-	for intentIndex, response := range pred {
-		fmt.Printf("%s: %0.6f\n", getTrainingData()[intentIndex].intent, response)
+func (predictor IntentPredictor) getFeatures(sentence string) []float64 {
+	features := make([]float64, len(predictor.bagOfWords))
+	for _, token := range parser.Transform(sentence).Tokens {
+		for word, wordIndex := range predictor.bagOfWords {
+			if word == token.Value {
+				features[wordIndex]++
+				break
+			}
+		}
 	}
+
+	return features
+}
+
+func (predictor *IntentPredictor) Init() {
+	trainingData := getTrainingData()
+
+	predictor.initBagOfWords(trainingData)
+	predictor.learn(trainingData)
+}
+
+func (predictor IntentPredictor) GetIntent(text string) IntentPrediction {
+	prediction := predictor.classifier.Update(predictor.getFeatures(text))
+	ip := IntentPrediction{}
+
+	for intentIndex, intentProbability := range prediction {
+		ip[predictor.intents[intentIndex]] = intentProbability
+	}
+
+	return ip
 }

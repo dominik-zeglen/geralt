@@ -1,8 +1,5 @@
 package intents
 
-// Intent is a representation of speaker's intentions in the given sentence
-type Intent string
-
 // Basic intents - small talk
 const Hello Intent = "basic.hello"
 const Status Intent = "basic.status"
