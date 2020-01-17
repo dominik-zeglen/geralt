@@ -59,6 +59,8 @@ func (predictor *IntentPredictor) initBagOfWords(training trainingDataset) {
 	saved, err := ioutil.ReadFile(bagOfWordsFilename)
 	if err == nil {
 		json.Unmarshal(saved, &predictor.bagOfWords)
+	} else {
+		predictor.bagOfWords = map[string]int{}
 	}
 
 	predictor.bagOfWords = map[string]int{}
