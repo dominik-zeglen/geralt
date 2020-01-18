@@ -25,8 +25,6 @@ func getTrainingData() trainingDataset {
 				"Hi",
 				"Hey",
 				"Hello",
-				"Sup",
-				"What's up",
 				"Morning",
 				"Good morning",
 				"Good evening",
@@ -40,7 +38,10 @@ func getTrainingData() trainingDataset {
 				"How are you",
 				"How's going",
 				"How's your day",
-				"Everything is okay",
+				"Everything okay?",
+				"Is everything okay?",
+				"Sup",
+				"What's up",
 			},
 		},
 
@@ -105,8 +106,10 @@ func getTrainingData() trainingDataset {
 			intent: BotStatus,
 			sentences: []string{
 				"Get your status",
-				"Is technically ok with you",
-				"Everything works",
+				"Is technically ok with you?",
+				"Everything works?",
+				"Status update",
+				"Technical check",
 			},
 		},
 

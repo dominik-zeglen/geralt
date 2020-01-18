@@ -8,9 +8,11 @@ import (
 
 	"github.com/dominik-zeglen/geralt/parser"
 	"github.com/goml/gobrain"
+	"github.com/goml/gobrain/persist"
 )
 
-const bagOfWordsFilename = "word-bag.json"
+const bagOfWordsFilename = "cache/intent-bag-of-words.json"
+const classifierFilename = "cache/intent-classifier.json"
 
 func getClass(intent int) []float64 {
 	classes := make([]float64, 13)
@@ -19,7 +21,7 @@ func getClass(intent int) []float64 {
 	return classes
 }
 
-func getPredictedClass(output []float64) int {
+func _getPredictedClass(output []float64) int {
 	max := output[0]
 	maxIndex := 0
 
@@ -33,12 +35,12 @@ func getPredictedClass(output []float64) int {
 	return maxIndex
 }
 
-func validate(cls gobrain.FeedForward, input [][][]float64) {
+func _validate(cls gobrain.FeedForward, input [][][]float64) {
 	predictions := make([]bool, len(input))
 
 	for predIndex, inputLine := range input {
 		output := cls.Update(inputLine[0])
-		predictions[predIndex] = getPredictedClass(output) == getPredictedClass(inputLine[1])
+		predictions[predIndex] = _getPredictedClass(output) == _getPredictedClass(inputLine[1])
 	}
 
 	sum := float64(0)
@@ -63,7 +65,6 @@ func (predictor *IntentPredictor) initBagOfWords(training trainingDataset) {
 		predictor.bagOfWords = map[string]int{}
 	}
 
-	predictor.bagOfWords = map[string]int{}
 	for _, intentData := range training {
 		predictor.intents = append(predictor.intents, intentData.intent)
 		if err != nil {
@@ -94,8 +95,9 @@ func (predictor *IntentPredictor) learn(trainingData trainingDataset) {
 	inputIndex := 0
 	for intentIndex, intentSet := range trainingData {
 		for _, sentence := range intentSet.sentences {
+			parsedSentence := parser.Transform(sentence)
 			input[inputIndex] = [][]float64{
-				predictor.getFeatures(sentence),
+				predictor.getFeatures(parsedSentence),
 				getClass(intentIndex),
 			}
 			inputIndex++
@@ -104,11 +106,13 @@ func (predictor *IntentPredictor) learn(trainingData trainingDataset) {
 
 	rand.Shuffle(len(input), func(i, j int) { input[i], input[j] = input[j], input[i] })
 	predictor.classifier.Train(input, 1000, 0.2, 0.4, false)
+
+	persist.Save(classifierFilename, predictor.classifier)
 }
 
-func (predictor IntentPredictor) getFeatures(sentence string) []float64 {
+func (predictor IntentPredictor) getFeatures(sentence parser.ParsedSentence) []float64 {
 	features := make([]float64, len(predictor.bagOfWords))
-	for _, token := range parser.Transform(sentence).Tokens {
+	for _, token := range sentence.Tokens {
 		for word, wordIndex := range predictor.bagOfWords {
 			if word == token.Value {
 				features[wordIndex]++
@@ -124,10 +128,14 @@ func (predictor *IntentPredictor) Init() {
 	trainingData := getTrainingData()
 
 	predictor.initBagOfWords(trainingData)
-	predictor.learn(trainingData)
+
+	classifierLoadErr := persist.Load(classifierFilename, &predictor.classifier)
+	if classifierLoadErr != nil {
+		predictor.learn(trainingData)
+	}
 }
 
-func (predictor IntentPredictor) GetIntent(text string) IntentPrediction {
+func (predictor IntentPredictor) GetIntent(text parser.ParsedSentence) IntentPrediction {
 	prediction := predictor.classifier.Update(predictor.getFeatures(text))
 	ip := IntentPrediction{}
 
