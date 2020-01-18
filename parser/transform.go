@@ -22,15 +22,14 @@ func init() {
 }
 
 func Transform(text string) ParsedSentence {
-	doc, _ := prose.NewDocument(strings.ToLower(text))
+	doc, _ := prose.NewDocument(strings.ToUpper(text))
 
-	tokens := []ParsedToken{}
-
-	for _, token := range doc.Tokens() {
-		tokens = append(tokens, ParsedToken{
+	tokens := make([]ParsedToken, len(doc.Tokens()))
+	for tokenIndex, token := range doc.Tokens() {
+		tokens[tokenIndex] = ParsedToken{
 			Value: getTokenValue(token.Text, token.Tag),
 			Tag:   token.Tag,
-		})
+		}
 	}
 
 	return ParsedSentence{
