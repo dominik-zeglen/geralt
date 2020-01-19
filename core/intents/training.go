@@ -65,7 +65,7 @@ func getTrainingData() trainingDataset {
 		},
 
 		trainingData{
-			intent: SetName,
+			intent: SetSpeakerName,
 			sentences: []string{
 				"I'm Alfred",
 				"My name is Todd",
@@ -75,19 +75,18 @@ func getTrainingData() trainingDataset {
 		},
 
 		trainingData{
-			intent: GetName,
+			intent: GetSpeakerName,
 			sentences: []string{
-				"Who are you speaking to",
-				"{{.Botname}}, what's my name",
+				"what's my name",
+				"who am I",
 			},
 		},
 
 		trainingData{
 			intent: SetBotName,
 			sentences: []string{
-				"Your name is {{.Botname}} since now",
-				"You are {{.Botname}}",
-				"You're {{.Botname}}",
+				"I want to change your name",
+				"Can I change your name",
 			},
 		},
 

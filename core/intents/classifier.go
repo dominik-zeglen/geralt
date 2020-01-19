@@ -1,9 +1,11 @@
 package intents
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 
 	"github.com/dominik-zeglen/geralt/parser"
@@ -60,8 +62,10 @@ func init() {
 func (predictor *IntentPredictor) initBagOfWords(training trainingDataset) {
 	saved, err := ioutil.ReadFile(bagOfWordsFilename)
 	if err == nil {
+		log.Println("Loaded bag of words from cache")
 		json.Unmarshal(saved, &predictor.bagOfWords)
 	} else {
+		log.Println("Creating bag of words")
 		predictor.bagOfWords = map[string]int{}
 	}
 
@@ -69,7 +73,7 @@ func (predictor *IntentPredictor) initBagOfWords(training trainingDataset) {
 		predictor.intents = append(predictor.intents, intentData.intent)
 		if err != nil {
 			for _, sentence := range intentData.sentences {
-				for _, token := range parser.Transform(sentence).Tokens {
+				for _, token := range parser.Transform(context.TODO(), sentence).Tokens {
 					if _, ok := predictor.bagOfWords[token.Value]; !ok {
 						predictor.bagOfWords[token.Value] = len(predictor.bagOfWords)
 					}
@@ -95,7 +99,7 @@ func (predictor *IntentPredictor) learn(trainingData trainingDataset) {
 	inputIndex := 0
 	for intentIndex, intentSet := range trainingData {
 		for _, sentence := range intentSet.sentences {
-			parsedSentence := parser.Transform(sentence)
+			parsedSentence := parser.Transform(context.TODO(), sentence)
 			input[inputIndex] = [][]float64{
 				predictor.getFeatures(parsedSentence),
 				getClass(intentIndex),
@@ -131,7 +135,10 @@ func (predictor *IntentPredictor) Init() {
 
 	classifierLoadErr := persist.Load(classifierFilename, &predictor.classifier)
 	if classifierLoadErr != nil {
+		log.Println("Training NLP prediction model")
 		predictor.learn(trainingData)
+	} else {
+		log.Println("Loaded NLP prediction model from cache")
 	}
 }
 
