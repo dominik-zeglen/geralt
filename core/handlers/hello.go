@@ -2,21 +2,28 @@ package handlers
 
 import (
 	"context"
-	"math/rand"
 
 	"github.com/dominik-zeglen/geralt/parser"
 )
 
-func HandleHello(
-	ctx context.Context,
-	sentence []parser.ParsedSentence,
-) string {
-	greetings := []string{
+const helloHandlerName = "hello"
+
+func init() {
+	templates := []string{
 		"Hi",
 		"Hello",
 		"Oh, hi",
 		"Hey",
 	}
 
-	return greetings[rand.Intn(len(greetings))]
+	responseTemplates.RegisterHandlerResponses(helloHandlerName, templates)
+}
+
+func HandleHello(
+	ctx context.Context,
+	sentence parser.ParsedSentence,
+) string {
+	tmpl := responseTemplates.GetRandomResponse(helloHandlerName)
+
+	return execTemplateWithContext(ctx, tmpl)
 }

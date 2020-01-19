@@ -2,6 +2,7 @@ package repl
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 
@@ -17,7 +18,8 @@ func Start() {
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
 
-		geralt.Reply(text)
-		fmt.Print("\n")
+		ctx := context.TODO()
+
+		fmt.Printf("%s\n", geralt.Reply(ctx, text))
 	}
 }

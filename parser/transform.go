@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"strings"
 
 	"github.com/caneroj1/stemmer"
@@ -21,7 +22,7 @@ func init() {
 	prose.WithSegmentation(false)
 }
 
-func Transform(text string) ParsedSentence {
+func Transform(ctx context.Context, text string) ParsedSentence {
 	doc, _ := prose.NewDocument(strings.ToUpper(text))
 
 	tokens := make([]ParsedToken, len(doc.Tokens()))

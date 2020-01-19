@@ -17,6 +17,20 @@ type IntentPredictor struct {
 
 type IntentPrediction map[Intent]float64
 
+func (prediction IntentPrediction) Max() (Intent, float64) {
+	var maxP float64
+	var maxI Intent
+
+	for intent, probability := range prediction {
+		if probability > maxP {
+			maxP = probability
+			maxI = intent
+		}
+	}
+
+	return maxI, maxP
+}
+
 func init() {
 	rand.Seed(0)
 }

@@ -9,8 +9,8 @@ const Start Intent = "conversation.on"
 const Stop Intent = "conversation.off"
 
 // Intents regarding speaker
-const SetName Intent = "speaker.setName"
-const GetName Intent = "speaker.getName"
+const SetSpeakerName Intent = "speaker.setName"
+const GetSpeakerName Intent = "speaker.getName"
 
 // Intents regarding bot
 const SetBotName Intent = "bot.setName"
