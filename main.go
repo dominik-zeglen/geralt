@@ -3,5 +3,7 @@ package main
 import "github.com/dominik-zeglen/geralt/repl"
 
 func main() {
-	repl.Start()
+	r := repl.Repl{}
+	r.Init()
+	r.Start()
 }

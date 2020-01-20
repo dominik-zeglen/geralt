@@ -6,24 +6,18 @@ import (
 
 	"github.com/dominik-zeglen/geralt/core/handlers"
 	"github.com/dominik-zeglen/geralt/core/intents"
-	"github.com/dominik-zeglen/geralt/core/middleware"
 	"github.com/dominik-zeglen/geralt/parser"
 )
 
 type Core struct {
-	middlewares     []middleware.Middleware
 	intentPredictor intents.IntentPredictor
 }
 
 func (c *Core) Init() {
-	c.middlewares = []middleware.Middleware{
-		middleware.WithBot,
-		middleware.WithUser,
-	}
 	c.intentPredictor.Init()
 }
 
-func (c Core) handleReply(ctx context.Context, text string) string {
+func (c Core) Reply(ctx context.Context, text string) string {
 	parsedText := parser.Transform(ctx, text)
 	intentProbs := c.intentPredictor.GetIntent(parsedText)
 
@@ -67,11 +61,4 @@ func (c Core) handleReply(ctx context.Context, text string) string {
 	}
 
 	return handler(ctx, parsedText)
-}
-
-func (c Core) Reply(ctx context.Context, text string) string {
-	for _, withMiddleware := range c.middlewares {
-		ctx = withMiddleware(ctx)
-	}
-	return c.handleReply(ctx, text)
 }
