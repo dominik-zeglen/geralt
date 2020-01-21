@@ -1,7 +1,11 @@
 package middleware
 
-import "context"
+import (
+	"context"
 
-type Middleware func(context.Context) context.Context
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type Middleware func(context.Context, *mongo.Database) context.Context
 
 type MiddlewareKey string

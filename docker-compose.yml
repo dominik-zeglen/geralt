@@ -1,0 +1,26 @@
+version: "2"
+services:
+  db:
+    image: library/mongo:3.4
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=geralt
+      - MONGO_INITDB_ROOT_PASSWORD=geralt
+    restart: unless-stopped
+
+  web:
+    links:
+      - db
+    depends_on:
+      - db
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_USERNAME=geralt
+      - DB_PASSWORD=geralt
+      - DB_HOSTNAME=mongodb://localhost:27017
+      - DB_NAME=geralt
+    volumes:
+      - "./cache:/app/cache"
