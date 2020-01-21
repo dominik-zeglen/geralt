@@ -3,23 +3,17 @@ package middleware
 import (
 	"context"
 
+	"github.com/dominik-zeglen/geralt/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const UserContextKey = MiddlewareKey("user")
 
-type UserData struct {
-	ID    primitive.ObjectID `bson:"_id, omitempty"`
-	Email string
-	Name  string
-}
-
 func WithUser(ctx context.Context, db *mongo.Database) context.Context {
-	user := ctx.Value(UserContextKey).(UserData)
+	user := ctx.Value(UserContextKey).(models.User)
 
-	collection := db.Collection("users")
+	collection := db.Collection(models.UsersCollectionKey)
 	err := collection.FindOne(context.TODO(), bson.M{
 		"_id": user.ID,
 	}).Decode(&user)
@@ -28,7 +22,5 @@ func WithUser(ctx context.Context, db *mongo.Database) context.Context {
 		panic(err)
 	}
 
-	return context.WithValue(ctx, UserContextKey, UserData{
-		Name: user.Name,
-	})
+	return context.WithValue(ctx, UserContextKey, user)
 }

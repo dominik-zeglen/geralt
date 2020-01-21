@@ -11,6 +11,7 @@ import (
 
 	"github.com/dominik-zeglen/geralt/core"
 	"github.com/dominik-zeglen/geralt/core/middleware"
+	"github.com/dominik-zeglen/geralt/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,14 +49,13 @@ func (r *Repl) Init() {
 	r.db = db
 }
 
-func getCurrentUser(users []middleware.UserData, reader *bufio.Reader) primitive.ObjectID {
+func getCurrentUser(users []models.User, reader *bufio.Reader) primitive.ObjectID {
+	fmt.Println("Select user:")
 	for userIndex, user := range users {
 		fmt.Printf("%d) %s\n", userIndex+1, user.Name)
 	}
 
 	var userID primitive.ObjectID
-
-	fmt.Println(users)
 
 	for ok := false; !ok; {
 		userIndexInput, _ := reader.ReadString('\n')
@@ -79,8 +79,7 @@ func (r Repl) Start() {
 		middleware.WithUser,
 	}
 
-	var userID primitive.ObjectID
-	users := []middleware.UserData{}
+	users := []models.User{}
 	maxUsers := int64(20)
 	userCursor, fetchErr := r.
 		db.
@@ -100,36 +99,19 @@ func (r Repl) Start() {
 		panic(decodeErr)
 	}
 
-	if len(users) > 0 {
-		userID = getCurrentUser(users, reader)
-	} else {
-		user, insertError := r.
-			db.
-			Collection("users").
-			InsertOne(
-				context.TODO(),
-				middleware.UserData{
-					Name:  "Admin",
-					Email: "admin@example.com",
-				})
-
-		if insertError != nil {
-			panic(insertError)
-		}
-
-		userID = user.InsertedID.(primitive.ObjectID)
-	}
+	userID := getCurrentUser(users, reader)
 
 	for true {
 		fmt.Print("> ")
 		text, _ := reader.ReadString('\n')
+		user := models.User{}
+		user.ID = userID
 
 		ctx := context.WithValue(
 			context.Background(),
 			middleware.UserContextKey,
-			middleware.UserData{
-				ID: userID,
-			})
+			user,
+		)
 		for _, withMiddleware := range middlewares {
 			ctx = withMiddleware(ctx, r.db)
 		}
