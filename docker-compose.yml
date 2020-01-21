@@ -20,3 +20,7 @@ services:
     environment:
       - DB_USERNAME=geralt
       - DB_PASSWORD=geralt
+      - DB_HOSTNAME=mongodb://localhost:27017
+      - DB_NAME=geralt
+    volumes:
+      - "./cache:/app/cache"

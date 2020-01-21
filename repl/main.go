@@ -18,19 +18,52 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func getEnvOrPanic(key string) string {
+	r := os.Getenv(key)
+	if r == "" {
+		panic(fmt.Errorf("Environment variable %s not set", key))
+	}
+
+	return r
+}
+
+type dbConfig struct {
+	username string
+	password string
+	hostname string
+	dbname   string
+}
+
+type config struct {
+	db dbConfig
+}
+
+func getConfig() config {
+	return config{
+		db: dbConfig{
+			username: getEnvOrPanic("DB_USERNAME"),
+			password: getEnvOrPanic("DB_PASSWORD"),
+			hostname: getEnvOrPanic("DB_HOSTNAME"),
+			dbname:   getEnvOrPanic("DB_NAME"),
+		},
+	}
+}
+
 type Repl struct {
 	db *mongo.Database
 }
 
 func (r *Repl) Init() {
+	conf := getConfig()
+
 	client, err := mongo.
 		NewClient(
 			options.
 				Client().
-				ApplyURI("mongodb://localhost:27017").
+				ApplyURI(conf.db.hostname).
 				SetAuth(options.Credential{
-					Username: "geralt",
-					Password: "geralt",
+					Username: conf.db.username,
+					Password: conf.db.password,
 				}))
 
 	if err != nil {
@@ -44,7 +77,7 @@ func (r *Repl) Init() {
 		panic(err)
 	}
 
-	db := client.Database("geralt")
+	db := client.Database(conf.db.dbname)
 
 	r.db = db
 }
