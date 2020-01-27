@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dominik-zeglen/geralt/api"
 )
@@ -22,7 +23,9 @@ type client struct {
 
 func (c *client) init() {
 	c.reader = bufio.NewReader(os.Stdin)
-	c.httpClient = http.Client{}
+	c.httpClient = http.Client{
+		Timeout: time.Second * 10,
+	}
 	if len(os.Args) > 1 {
 		c.uri = os.Args[1]
 	} else {
