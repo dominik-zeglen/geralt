@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/dominik-zeglen/geralt/api"
-	"github.com/dominik-zeglen/geralt/utils"
 )
 
 type client struct {
@@ -24,7 +23,11 @@ type client struct {
 func (c *client) init() {
 	c.reader = bufio.NewReader(os.Stdin)
 	c.httpClient = http.Client{}
-	c.uri = "http://localhost:" + utils.GetEnvOrPanic("PORT")
+	if len(os.Args) > 1 {
+		c.uri = os.Args[1]
+	} else {
+		panic(fmt.Errorf("no hostname provided"))
+	}
 }
 
 func (c *client) getInput() string {
