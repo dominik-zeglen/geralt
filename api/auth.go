@@ -10,15 +10,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-type authRequest struct {
+type AuthRequest struct {
 	Email string `json:"email"`
 }
-type authResponse struct {
+type AuthResponse struct {
 	Token string `json:"token"`
 }
 
 func (api *API) handleAuth(w http.ResponseWriter, r *http.Request) {
-	var data authRequest
+	var data AuthRequest
 	var user models.User
 
 	reqDecodeErr := json.NewDecoder(r.Body).Decode(&data)
@@ -33,7 +33,7 @@ func (api *API) handleAuth(w http.ResponseWriter, r *http.Request) {
 	}).Decode(&user)
 
 	if err != nil {
-		http.Error(w, reqDecodeErr.Error(), http.StatusForbidden)
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
@@ -43,7 +43,7 @@ func (api *API) handleAuth(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString([]byte(api.conf.secret))
 
-	reply := authResponse{
+	reply := AuthResponse{
 		Token: tokenString,
 	}
 

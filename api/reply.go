@@ -5,15 +5,15 @@ import (
 	"net/http"
 )
 
-type replyRequest struct {
+type ReplyRequest struct {
 	Sentence string `json:"sentence"`
 }
-type replyResponse struct {
+type ReplyResponse struct {
 	Reply string `json:"reply"`
 }
 
 func (api *API) handleReply(w http.ResponseWriter, r *http.Request) {
-	var data replyRequest
+	var data ReplyRequest
 
 	reqDecodeErr := json.NewDecoder(r.Body).Decode(&data)
 	if reqDecodeErr != nil {
@@ -21,7 +21,7 @@ func (api *API) handleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reply := replyResponse{
+	reply := ReplyResponse{
 		Reply: api.geralt.Reply(r.Context(), data.Sentence),
 	}
 
