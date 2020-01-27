@@ -9,10 +9,12 @@ ADD . /app/
 WORKDIR /app/
 
 RUN go build main.go
+RUN go build migrations/main.go migrate
 
 FROM alpine
 WORKDIR /app
 RUN mkdir /app/app
 COPY --from=builder /app/main /app/main
+COPY --from=builder /app/migrate /app/migrate
 
 CMD ["/app/main"]
