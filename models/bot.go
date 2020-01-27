@@ -14,7 +14,7 @@ type Bot struct {
 	Name string
 }
 
-func getBot(db *mongo.Database) (Bot, error) {
+func GetBot(db *mongo.Database) (Bot, error) {
 	bot := Bot{}
 	collection := db.Collection(GlobalsCollectionKey)
 	err := collection.FindOne(context.TODO(), bson.M{

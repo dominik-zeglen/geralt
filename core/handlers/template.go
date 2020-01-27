@@ -7,12 +7,11 @@ import (
 	"text/template"
 
 	"github.com/dominik-zeglen/geralt/core/intents"
-	"github.com/dominik-zeglen/geralt/core/middleware"
 	"github.com/dominik-zeglen/geralt/models"
 )
 
 type responseTemplateData struct {
-	Bot  middleware.BotData
+	Bot  models.Bot
 	User models.User
 }
 
@@ -79,8 +78,8 @@ func (t handlerResponseTemplates) GetRandomResponse(
 }
 
 func execTemplateWithContext(ctx context.Context, t *template.Template) string {
-	bot := ctx.Value(middleware.BotContextKey).(middleware.BotData)
-	user := ctx.Value(middleware.UserContextKey).(models.User)
+	bot := ctx.Value(BotContextKey).(models.Bot)
+	user := ctx.Value(UserContextKey).(models.User)
 
 	response := bytes.Buffer{}
 	err := t.Execute(&response, responseTemplateData{
