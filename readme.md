@@ -18,7 +18,7 @@ $ go run main.go
 
 ## Client
 
-To run terminal client use th following command.
+To run terminal client use the following command.
 ```shell
 $ go run client/main.go http://hostname:port
 ```
