@@ -9,7 +9,7 @@ ADD . /app/
 WORKDIR /app/
 
 RUN go build main.go
-RUN go build -o migrate migrations/main.go
+RUN go build -o migrate migrations/*.go
 
 FROM alpine
 WORKDIR /app
