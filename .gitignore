@@ -1,4 +1,5 @@
 .*
+bin/*
 cache/*
 !.gitkeep
 !.gitignore
