@@ -7,10 +7,9 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/dominik-zeglen/geralt/core/handlers"
-	"github.com/dominik-zeglen/geralt/models"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+const userIDContextKey = "userID"
 
 // UserClaims holds all token data
 type UserClaims struct {
@@ -42,16 +41,12 @@ func (api *API) withJwt(
 			}
 
 			if claims, valid := token.Claims.(*UserClaims); valid && token.Valid {
-				user := models.User{}
-				id, err := primitive.ObjectIDFromHex(claims.ID)
+				ctx := context.WithValue(
+					r.Context(),
+					userIDContextKey,
+					claims.ID,
+				)
 
-				if err != nil {
-					next(w, r)
-				}
-
-				user.ID = id
-
-				ctx := context.WithValue(r.Context(), handlers.UserContextKey, user)
 				next(w, r.WithContext(ctx))
 			} else {
 				next(w, r)

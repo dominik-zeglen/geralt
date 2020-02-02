@@ -79,12 +79,12 @@ func (t handlerResponseTemplates) GetRandomResponse(
 
 func execTemplateWithContext(ctx context.Context, t *template.Template) string {
 	bot := ctx.Value(BotContextKey).(models.Bot)
-	user := ctx.Value(UserContextKey).(models.User)
+	user := ctx.Value(UserContextKey).(User)
 
 	response := bytes.Buffer{}
 	err := t.Execute(&response, responseTemplateData{
 		bot,
-		user,
+		user.Data,
 	})
 
 	if err != nil {
