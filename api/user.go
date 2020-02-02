@@ -22,7 +22,7 @@ func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 			ctx := context.WithValue(
 				r.Context(),
 				handlers.UserContextKey,
-				&cachedUser,
+				*cachedUser,
 			)
 
 			next(w, r.WithContext(ctx))
