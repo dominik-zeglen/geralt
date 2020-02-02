@@ -5,7 +5,10 @@ import (
 	"text/template"
 
 	"github.com/dominik-zeglen/geralt/core/flow"
+	"github.com/dominik-zeglen/geralt/models"
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const botNameSetHandlerNameOk = "botNameSetOk"
@@ -29,6 +32,7 @@ func init() {
 
 func HandleBotNameSet(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	user := GetUserFromContext(ctx)
@@ -38,6 +42,25 @@ func HandleBotNameSet(
 	if len(sentence.Tokens) > 1 {
 		tmpl = responseTemplates.GetRandomResponse(botNameSetHandlerNameNotOk)
 	} else {
+		globals := db.Collection(models.GlobalsCollectionKey)
+		bot := GetBotFromContext(ctx)
+		bot.Name = sentence.Text
+		r, updateErr := globals.UpdateOne(
+			context.TODO(),
+			bson.M{
+				"_id": bot.ID,
+			}, bson.M{
+				"$set": bson.M{
+					"name": bot.Name,
+				},
+			},
+		)
+
+		if updateErr != nil || r.MatchedCount == 0 {
+			panic(updateErr)
+		}
+
+		ctx = context.WithValue(ctx, BotContextKey, bot)
 		tmpl = responseTemplates.GetRandomResponse(botNameSetHandlerNameOk)
 	}
 

@@ -57,7 +57,7 @@ func (api *API) Init() {
 	api.users = cache.New(2*time.Minute, 4*time.Minute)
 
 	api.geralt = core.Core{}
-	api.geralt.Init()
+	api.geralt.Init(api.db)
 }
 
 func (api API) Start() {

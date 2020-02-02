@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const getBotNameHandlerName = "Hello"
@@ -12,7 +13,7 @@ func init() {
 	templates := []string{
 		"I'm {{.Bot.Name}}",
 		"My name is {{.Bot.Name}}",
-		"I'm {{.Bot.Name}}, autonomic bot",
+		"I'm {{.Bot.Name}}, an autonomic bot",
 	}
 
 	responseTemplates.RegisterHandlerResponses(getBotNameHandlerName, templates)
@@ -20,6 +21,7 @@ func init() {
 
 func HandleGetBotName(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	tmpl := responseTemplates.GetRandomResponse(getBotNameHandlerName)

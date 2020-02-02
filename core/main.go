@@ -2,19 +2,21 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/dominik-zeglen/geralt/core/flow"
 	"github.com/dominik-zeglen/geralt/core/handlers"
 	"github.com/dominik-zeglen/geralt/core/intents"
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Core struct {
+	db              *mongo.Database
 	intentPredictor intents.IntentPredictor
 }
 
-func (c *Core) Init() {
+func (c *Core) Init(db *mongo.Database) {
+	c.db = db
 	c.intentPredictor.Init()
 }
 
@@ -25,7 +27,6 @@ func (c Core) Reply(ctx context.Context, text string) string {
 	intentProbs := c.intentPredictor.GetIntent(parsedText)
 
 	user := handlers.GetUserFromContext(ctx)
-	fmt.Println(user.FlowState.Current())
 	if user.FlowState.Current() != flow.Default.String() {
 		switch user.FlowState.Current() {
 		case flow.SettingBotName.String():
@@ -70,5 +71,5 @@ func (c Core) Reply(ctx context.Context, text string) string {
 	// 	fmt.Printf("%s: %0.5f\n", intent, intentProb)
 	// }
 
-	return handler(ctx, parsedText)
+	return handler(ctx, c.db, parsedText)
 }

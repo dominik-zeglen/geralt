@@ -5,6 +5,7 @@ import (
 
 	"github.com/dominik-zeglen/geralt/core/flow"
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const setBotNameHandlerName = "setBotName"
@@ -20,6 +21,7 @@ func init() {
 
 func HandleSetBotName(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	user := GetUserFromContext(ctx)

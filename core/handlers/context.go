@@ -12,6 +12,10 @@ type ContextKey string
 const BotContextKey = ContextKey("bot")
 const UserContextKey = ContextKey("user")
 
+func GetBotFromContext(ctx context.Context) models.Bot {
+	return ctx.Value(BotContextKey).(models.Bot)
+}
+
 type User struct {
 	Data      models.User
 	FlowState *fsm.FSM

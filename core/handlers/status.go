@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const statusHandlerName = "status"
@@ -21,6 +22,7 @@ func init() {
 
 func HandleStatus(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	tmpl := responseTemplates.GetRandomResponse(statusHandlerName)
