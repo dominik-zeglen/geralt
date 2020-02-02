@@ -7,8 +7,8 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func (api *API) rememberUser(user models.User) handlers.User {
-	userData := handlers.User{
+func (api *API) rememberUser(user models.User) *handlers.User {
+	userData := &handlers.User{
 		Data:      user,
 		FlowState: flow.NewFlow(),
 	}
@@ -24,7 +24,7 @@ func (api *API) getUser(id string) *handlers.User {
 		return nil
 	}
 
-	user := u.(handlers.User)
+	user := u.(*handlers.User)
 
-	return &user
+	return user
 }

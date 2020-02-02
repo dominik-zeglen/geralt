@@ -10,6 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func addUserToContext(
+	ctx context.Context,
+	user *handlers.User,
+) context.Context {
+	return context.WithValue(ctx, handlers.UserContextKey, user)
+}
+
 func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := r.Context().Value(userIDContextKey).(string)
@@ -19,11 +26,7 @@ func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 
 		cachedUser := api.getUser(userID)
 		if cachedUser != nil {
-			ctx := context.WithValue(
-				r.Context(),
-				handlers.UserContextKey,
-				*cachedUser,
-			)
+			ctx := addUserToContext(r.Context(), cachedUser)
 
 			next(w, r.WithContext(ctx))
 		} else {
@@ -44,11 +47,7 @@ func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 
 			rememberedUser := api.rememberUser(user)
 
-			ctx := context.WithValue(
-				r.Context(),
-				handlers.UserContextKey,
-				rememberedUser,
-			)
+			ctx := addUserToContext(r.Context(), rememberedUser)
 
 			next(w, r.WithContext(ctx))
 		}

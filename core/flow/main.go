@@ -41,7 +41,7 @@ func init() {
 
 func NewFlow() *fsm.FSM {
 	return fsm.NewFSM(
-		string(Default),
+		Default.String(),
 		events,
 		fsm.Callbacks{},
 	)
