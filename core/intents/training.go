@@ -67,10 +67,8 @@ func getTrainingData() trainingDataset {
 		trainingData{
 			intent: SetSpeakerName,
 			sentences: []string{
-				"I'm Alfred",
-				"My name is Todd",
-				"I'm Monica",
-				"Call me Jack",
+				"I want to change my name",
+				"Can i change my name",
 			},
 		},
 

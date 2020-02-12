@@ -8,25 +8,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const setSpeakerNameHandlerName = "setSpeakerName"
+const backHandlerName = "back"
 
 func init() {
 	templates := []string{
-		"Ok, so what's your name?",
+		"Ok",
+		"Ok, nevermind",
+		"As you wish",
 	}
 
-	responseTemplates.RegisterHandlerResponses(setSpeakerNameHandlerName, templates)
+	responseTemplates.RegisterHandlerResponses(backHandlerName, templates)
 }
 
-func HandleSetSpeakerName(
+func HandleBack(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	user := GetUserFromContext(ctx)
-	user.FlowState.Event(flow.ToSpeakerNameSetting.String())
-
-	tmpl := responseTemplates.GetRandomResponse(setSpeakerNameHandlerName)
+	user.FlowState.SetState(flow.Default.String())
+	tmpl := responseTemplates.GetRandomResponse(backHandlerName)
 
 	return execTemplateWithContext(ctx, tmpl)
 }

@@ -8,16 +8,15 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[Back-0]
-	_ = x[ToBotNameSetting-1]
-	_ = x[BotNameSet-2]
-	_ = x[ToSpeakerNameSetting-3]
-	_ = x[SpeakerNameSet-4]
+	_ = x[ToBotNameSetting-0]
+	_ = x[BotNameSet-1]
+	_ = x[ToSpeakerNameSetting-2]
+	_ = x[SpeakerNameSet-3]
 }
 
-const _FlowEvent_name = "BackToBotNameSettingBotNameSetToSpeakerNameSettingSpeakerNameSet"
+const _FlowEvent_name = "ToBotNameSettingBotNameSetToSpeakerNameSettingSpeakerNameSet"
 
-var _FlowEvent_index = [...]uint8{0, 4, 20, 30, 50, 64}
+var _FlowEvent_index = [...]uint8{0, 16, 26, 46, 60}
 
 func (i FlowEvent) String() string {
 	if i < 0 || i >= FlowEvent(len(_FlowEvent_index)-1) {

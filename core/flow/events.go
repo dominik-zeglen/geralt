@@ -4,9 +4,7 @@ package flow
 type FlowEvent int
 
 const (
-	Back FlowEvent = iota
-
-	ToBotNameSetting
+	ToBotNameSetting FlowEvent = iota
 	BotNameSet
 
 	ToSpeakerNameSetting
