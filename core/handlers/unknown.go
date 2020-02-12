@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const unknownHandlerName = "unknown"
@@ -20,6 +21,7 @@ func init() {
 
 func HandleUnknown(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
 	tmpl := responseTemplates.GetRandomResponse(unknownHandlerName)

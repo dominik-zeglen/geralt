@@ -9,6 +9,7 @@ import (
 	"github.com/dominik-zeglen/geralt/core"
 	"github.com/dominik-zeglen/geralt/models"
 	"github.com/dominik-zeglen/geralt/utils"
+	"github.com/patrickmn/go-cache"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -22,6 +23,7 @@ type API struct {
 	conf   config
 	db     *mongo.Database
 	geralt core.Core
+	users  *cache.Cache
 }
 
 func (api *API) Init() {
@@ -52,8 +54,10 @@ func (api *API) Init() {
 
 	api.db = client.Database(dbConfig.DBName)
 
+	api.users = cache.New(2*time.Minute, 4*time.Minute)
+
 	api.geralt = core.Core{}
-	api.geralt.Init()
+	api.geralt.Init(api.db)
 }
 
 func (api API) Start() {

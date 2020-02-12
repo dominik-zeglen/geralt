@@ -7,23 +7,49 @@ import (
 	"github.com/dominik-zeglen/geralt/core/handlers"
 	"github.com/dominik-zeglen/geralt/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func addUserToContext(
+	ctx context.Context,
+	user *handlers.User,
+) context.Context {
+	return context.WithValue(ctx, handlers.UserContextKey, user)
+}
 
 func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value(handlers.UserContextKey).(models.User)
-
-		collection := api.db.Collection(models.UsersCollectionKey)
-		err := collection.FindOne(context.TODO(), bson.M{
-			"_id": user.ID,
-		}).Decode(&user)
-
-		if err != nil {
-			panic(err)
+		userID, ok := r.Context().Value(userIDContextKey).(string)
+		if !ok {
+			// return 400
 		}
 
-		ctx := context.WithValue(r.Context(), handlers.UserContextKey, user)
+		cachedUser := api.getUser(userID)
+		if cachedUser != nil {
+			ctx := addUserToContext(r.Context(), cachedUser)
 
-		next(w, r.WithContext(ctx))
+			next(w, r.WithContext(ctx))
+		} else {
+			id, conversionErr := primitive.ObjectIDFromHex(userID)
+			if conversionErr != nil {
+				// return 500
+			}
+
+			var user models.User
+			collection := api.db.Collection(models.UsersCollectionKey)
+			selectionErr := collection.FindOne(context.TODO(), bson.M{
+				"_id": id,
+			}).Decode(&user)
+
+			if selectionErr != nil {
+				panic(selectionErr)
+			}
+
+			rememberedUser := api.rememberUser(user)
+
+			ctx := addUserToContext(r.Context(), rememberedUser)
+
+			next(w, r.WithContext(ctx))
+		}
 	}
 }

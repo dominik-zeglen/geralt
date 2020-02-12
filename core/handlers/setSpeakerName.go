@@ -3,16 +3,16 @@ package handlers
 import (
 	"context"
 
+	"github.com/dominik-zeglen/geralt/core/flow"
 	"github.com/dominik-zeglen/geralt/parser"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const setSpeakerNameHandlerName = "setSpeakerName"
 
 func init() {
 	templates := []string{
-		"Nice to meet you, {{.User.Name}}",
-		"It is a pleasure meet you, {{.User.Name}}",
-		"Hello {{.User.Name}}, I'm {{.Bot.Name}}",
+		"Ok, so what's your name?",
 	}
 
 	responseTemplates.RegisterHandlerResponses(setSpeakerNameHandlerName, templates)
@@ -20,9 +20,13 @@ func init() {
 
 func HandleSetSpeakerName(
 	ctx context.Context,
+	db *mongo.Database,
 	sentence parser.ParsedSentence,
 ) string {
-	tmpl := responseTemplates.GetRandomResponse(setBotNameHandlerName)
+	user := GetUserFromContext(ctx)
+	user.FlowState.Event(flow.ToSpeakerNameSetting.String())
+
+	tmpl := responseTemplates.GetRandomResponse(setSpeakerNameHandlerName)
 
 	return execTemplateWithContext(ctx, tmpl)
 }
