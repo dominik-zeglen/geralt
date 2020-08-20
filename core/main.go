@@ -8,6 +8,7 @@ import (
 	"github.com/dominik-zeglen/geralt/core/handlers"
 	"github.com/dominik-zeglen/geralt/core/intents"
 	"github.com/dominik-zeglen/geralt/parser"
+	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,12 +25,29 @@ func (c *Core) Init(db *mongo.Database) {
 }
 
 func (c Core) Reply(ctx context.Context, text string) string {
+	span, spanCtx := opentracing.StartSpanFromContext(
+		ctx,
+		"core-reply",
+	)
+	defer span.Finish()
+
 	var handler handlers.ReplyHandler
 
-	parsedText := parser.Transform(ctx, text)
-	intentProbs := c.intentPredictor.GetIntent(parsedText)
+	parseSpan := opentracing.StartSpan(
+		"parser-transform",
+		opentracing.ChildOf(span.Context()),
+	)
+	parsedText := parser.Transform(spanCtx, text)
+	parseSpan.Finish()
 
-	user := handlers.GetUserFromContext(ctx)
+	predictSpan := opentracing.StartSpan(
+		"core-predict-intent",
+		opentracing.ChildOf(span.Context()),
+	)
+	intentProbs := c.intentPredictor.GetIntent(parsedText)
+	predictSpan.Finish()
+
+	user := handlers.GetUserFromContext(spanCtx)
 	intent, intentProb := intentProbs.Max()
 	if intentProb > intentThreshold && intent == intents.Back {
 		handler = handlers.HandleBack
@@ -80,5 +98,5 @@ func (c Core) Reply(ctx context.Context, text string) string {
 		fmt.Printf("%s: %0.5f\n", intent, intentProb)
 	}
 
-	return handler(ctx, c.db, parsedText)
+	return handler(spanCtx, c.db, parsedText)
 }

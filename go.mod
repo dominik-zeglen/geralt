@@ -13,12 +13,16 @@ require (
 	github.com/gonum/matrix v0.0.0-20181209220409-c518dec07be9 // indirect
 	github.com/looplab/fsm v0.1.0
 	github.com/mingrammer/commonregex v1.0.1 // indirect
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sjwhitworth/golearn v0.0.0-20191230161259-3e43e74895fb
 	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/uber/jaeger-client-go v2.22.1+incompatible
+	github.com/uber/jaeger-lib v2.2.0+incompatible
 	github.com/xakep666/mongo-migrate v0.2.1
 	go.mongodb.org/mongo-driver v1.2.1
+	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/tools v0.0.0-20200131211209-ecb101ed6550 // indirect
 	gonum.org/v1/gonum v0.6.2 // indirect

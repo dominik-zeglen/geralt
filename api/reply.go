@@ -3,6 +3,9 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type ReplyRequest struct {
@@ -13,6 +16,12 @@ type ReplyResponse struct {
 }
 
 func (api *API) handleReply(w http.ResponseWriter, r *http.Request) {
+	span, ctx := opentracing.StartSpanFromContext(
+		r.Context(),
+		"handler-reply",
+	)
+	defer span.Finish()
+
 	var data ReplyRequest
 
 	reqDecodeErr := json.NewDecoder(r.Body).Decode(&data)
@@ -21,8 +30,12 @@ func (api *API) handleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	span.LogFields(
+		log.String("sentence", data.Sentence),
+	)
+
 	reply := ReplyResponse{
-		Reply: api.geralt.Reply(r.Context(), data.Sentence),
+		Reply: api.geralt.Reply(ctx, data.Sentence),
 	}
 
 	jsonResponse, resEncodeErr := json.Marshal(&reply)

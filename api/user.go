@@ -6,6 +6,8 @@ import (
 
 	"github.com/dominik-zeglen/geralt/core/handlers"
 	"github.com/dominik-zeglen/geralt/models"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -19,20 +21,31 @@ func addUserToContext(
 
 func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, ok := r.Context().Value(userIDContextKey).(string)
+		span, ctx := opentracing.StartSpanFromContext(
+			r.Context(),
+			"middleware-user",
+		)
+
+		userID, ok := ctx.Value(userIDContextKey).(string)
 		if !ok {
-			// return 400
+			w.WriteHeader(http.StatusForbidden)
 		}
 
 		cachedUser := api.getUser(userID)
 		if cachedUser != nil {
-			ctx := addUserToContext(r.Context(), cachedUser)
+			span.LogFields(
+				log.Bool("cached", true),
+			)
+			ctx = addUserToContext(ctx, cachedUser)
 
+			span.Finish()
 			next(w, r.WithContext(ctx))
+			return
 		} else {
 			id, conversionErr := primitive.ObjectIDFromHex(userID)
 			if conversionErr != nil {
-				// return 500
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 
 			var user models.User
@@ -47,9 +60,14 @@ func (api *API) withUser(next http.HandlerFunc) http.HandlerFunc {
 
 			rememberedUser := api.rememberUser(user)
 
-			ctx := addUserToContext(r.Context(), rememberedUser)
+			span.LogFields(
+				log.Bool("cached", false),
+			)
+			ctx = addUserToContext(ctx, rememberedUser)
 
+			span.Finish()
 			next(w, r.WithContext(ctx))
+			return
 		}
 	}
 }

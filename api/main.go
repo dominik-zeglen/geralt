@@ -65,13 +65,14 @@ func (api API) Start() {
 	mux.Handle("/", combineMiddlewares(
 		http.HandlerFunc(api.handleReply),
 		[]Middleware{
+			api.withTracing,
 			api.withJwt,
 			api.withUser,
 			api.withBot,
 		},
 	),
 	)
-	mux.HandleFunc("/auth", api.handleAuth)
+	mux.HandleFunc("/auth", api.withTracing(api.handleAuth))
 
 	err := http.ListenAndServe(":"+api.conf.port, mux)
 	log.Fatal(err)
