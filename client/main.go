@@ -54,7 +54,7 @@ func (c *client) login() error {
 
 	res, err := http.Post(c.uri+"/auth", "application/json", loginBodyReader)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer res.Body.Close()
 
