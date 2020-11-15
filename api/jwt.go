@@ -23,7 +23,8 @@ func (api *API) withJwt(
 	next http.HandlerFunc,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		span, ctx := opentracing.StartSpanFromContext(
+		ctx := r.Context()
+		span, _ := opentracing.StartSpanFromContext(
 			r.Context(),
 			"middleware-jwt",
 		)

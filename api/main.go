@@ -74,6 +74,7 @@ func (api API) Start() {
 	)
 	mux.HandleFunc("/auth", api.withTracing(api.handleAuth))
 
+	log.Println("Serving at port", api.conf.port)
 	err := http.ListenAndServe(":"+api.conf.port, mux)
 	log.Fatal(err)
 }

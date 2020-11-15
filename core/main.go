@@ -33,12 +33,7 @@ func (c Core) Reply(ctx context.Context, text string) string {
 
 	var handler handlers.ReplyHandler
 
-	parseSpan := opentracing.StartSpan(
-		"parser-transform",
-		opentracing.ChildOf(span.Context()),
-	)
 	parsedText := parser.Transform(spanCtx, text)
-	parseSpan.Finish()
 
 	predictSpan := opentracing.StartSpan(
 		"core-predict-intent",

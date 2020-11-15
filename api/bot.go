@@ -13,8 +13,9 @@ func (api *API) withBot(
 	next http.HandlerFunc,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		span, ctx := opentracing.StartSpanFromContext(
-			r.Context(),
+		ctx := r.Context()
+		span, _ := opentracing.StartSpanFromContext(
+			ctx,
 			"middleware-bot",
 		)
 

@@ -11,8 +11,12 @@ func main() {
 	opentracing.SetGlobalTracer(tracer)
 	defer closer.Close()
 
+	span := opentracing.GlobalTracer().StartSpan("api-init")
+
 	api := api.API{}
 	api.Init()
+
+	span.Finish()
 
 	api.Start()
 }
