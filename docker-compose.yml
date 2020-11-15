@@ -9,9 +9,22 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=geralt
     restart: unless-stopped
 
+  tracing:
+    image: jaegertracing/all-in-one
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686" # Web UI
+      - "14268:14268"
+      - "9411:9411"
+    restart: unless-stopped
+
   web:
     links:
       - db
+      - tracing
     depends_on:
       - db
     build: .
@@ -22,6 +35,7 @@ services:
       - DB_PASSWORD=geralt
       - DB_HOSTNAME=mongodb://db:27017
       - DB_NAME=geralt
+      - JAEGER_AGENT_HOST=jaeger
       - SECRET=plschangeme
       - PORT=8000
     volumes:

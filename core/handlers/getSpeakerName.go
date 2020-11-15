@@ -9,16 +9,26 @@ import (
 
 const getSpeakerNameHandlerName = "getSpeakerName"
 
+var GetSpeakerNameHandler ReplyHandler
+
 func init() {
 	templates := []string{
 		"You are {{.User.Name}}",
 		"{{.User.Name}}",
 	}
 
-	responseTemplates.RegisterHandlerResponses(getSpeakerNameHandlerName, templates)
+	responseTemplates.RegisterHandlerResponses(
+		getSpeakerNameHandlerName,
+		templates,
+	)
+
+	GetSpeakerNameHandler = createReplyHandler(
+		getSpeakerNameHandlerName,
+		handleGetSpeakerName,
+	)
 }
 
-func HandleGetSpeakerName(
+func handleGetSpeakerName(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,

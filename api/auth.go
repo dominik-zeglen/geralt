@@ -7,6 +7,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dominik-zeglen/geralt/models"
+	opentracing "github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -21,12 +22,22 @@ func (api *API) handleAuth(w http.ResponseWriter, r *http.Request) {
 	var data AuthRequest
 	var user models.User
 
+	span, spanCtx := opentracing.StartSpanFromContext(
+		r.Context(),
+		"handler-auth",
+	)
+	defer span.Finish()
+
 	reqDecodeErr := json.NewDecoder(r.Body).Decode(&data)
 	if reqDecodeErr != nil {
 		http.Error(w, reqDecodeErr.Error(), http.StatusBadRequest)
 		return
 	}
 
+	dbSpan, _ := opentracing.StartSpanFromContext(
+		spanCtx,
+		"db-call",
+	)
 	collection := api.db.Collection(models.UsersCollectionKey)
 	err := collection.FindOne(context.TODO(), bson.M{
 		"email": data.Email,
@@ -36,6 +47,7 @@ func (api *API) handleAuth(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
+	dbSpan.Finish()
 
 	claims := UserClaims{
 		ID: user.ID.Hex(),

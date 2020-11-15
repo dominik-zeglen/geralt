@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 const userIDContextKey = "userID"
@@ -21,6 +23,12 @@ func (api *API) withJwt(
 	next http.HandlerFunc,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		span, _ := opentracing.StartSpanFromContext(
+			r.Context(),
+			"middleware-jwt",
+		)
+
 		headerContent := r.Header.Get("Authorization")
 		if headerContent != "" && headerContent != "null" {
 			tokenString := strings.Split(headerContent, " ")[1]
@@ -36,23 +44,24 @@ func (api *API) withJwt(
 			)
 
 			if err != nil {
-				next(w, r)
+				w.WriteHeader(http.StatusForbidden)
 				return
 			}
 
 			if claims, valid := token.Claims.(*UserClaims); valid && token.Valid {
-				ctx := context.WithValue(
-					r.Context(),
+				span.LogFields(
+					log.String("authorized-as", claims.ID),
+				)
+				ctx = context.WithValue(
+					ctx,
 					userIDContextKey,
 					claims.ID,
 				)
-
-				next(w, r.WithContext(ctx))
-			} else {
-				next(w, r)
 			}
-		} else {
-			next(w, r)
 		}
+
+		span.Finish()
+		next(w, r.WithContext(ctx))
+		return
 	}
 }

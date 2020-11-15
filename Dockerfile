@@ -8,15 +8,15 @@ RUN mkdir /app/
 ADD . /app/
 WORKDIR /app/
 
-RUN go build main.go
-RUN go build -o migrate migrations/*.go
-RUN go build -o client client/main.go
+RUN go build -o bin/main main.go
+RUN go build -o bin/migrate migrations/*.go
+RUN go build -o bin/client client/main.go
 
 FROM alpine
 WORKDIR /app
 RUN mkdir /app/app
-COPY --from=builder /app/main /app/main
-COPY --from=builder /app/migrate /app/migrate
-COPY --from=builder /app/client /app/client
+COPY --from=builder /app/bin/main /app/main
+COPY --from=builder /app/bin/migrate /app/migrate
+COPY --from=builder /app/bin/client /app/client
 
 CMD ["/app/main"]

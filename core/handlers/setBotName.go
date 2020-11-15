@@ -10,6 +10,8 @@ import (
 
 const setBotNameHandlerName = "setBotName"
 
+var SetBotNameHandler ReplyHandler
+
 func init() {
 	templates := []string{
 		"Ok, how am I going to be called?",
@@ -17,9 +19,14 @@ func init() {
 	}
 
 	responseTemplates.RegisterHandlerResponses(setBotNameHandlerName, templates)
+
+	SetBotNameHandler = createReplyHandler(
+		setBotNameHandlerName,
+		handleSetBotName,
+	)
 }
 
-func HandleSetBotName(
+func handleSetBotName(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,
