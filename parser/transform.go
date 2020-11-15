@@ -28,7 +28,10 @@ func Transform(ctx context.Context, text string) ParsedSentence {
 	defer span.Finish()
 
 	docSpan, _ := opentracing.StartSpanFromContext(spanCtx, "create-doc")
-	doc, _ := prose.NewDocument(strings.ToUpper(text))
+	doc, _ := prose.NewDocument(
+		strings.ToUpper(text),
+		prose.WithExtraction(false),
+	)
 	docSpan.Finish()
 
 	tokenSpan, _ := opentracing.StartSpanFromContext(spanCtx, "create-tokens")
