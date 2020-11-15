@@ -7,12 +7,14 @@ import (
 	"github.com/dominik-zeglen/geralt/core/flow"
 	"github.com/dominik-zeglen/geralt/models"
 	"github.com/dominik-zeglen/geralt/parser"
+	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const botNameSetHandlerNameOk = "botNameSetOk"
-const botNameSetHandlerNameNotOk = "botNameSetNotOk"
+const botNameSetHandlerName = "botNameSet"
+
+var BotNameSetHandler ReplyHandler
 
 func init() {
 	okTemplates := []string{
@@ -21,16 +23,27 @@ func init() {
 		"Then I'm {{.Bot.Name}}",
 	}
 
-	responseTemplates.RegisterHandlerResponses(botNameSetHandlerNameOk, okTemplates)
+	responseTemplates.RegisterHandlerResponses(
+		botNameSetHandlerName+handlerOkSuffix,
+		okTemplates,
+	)
 
 	notOkTemplates := []string{
 		"I don't think it's a legit name",
 	}
 
-	responseTemplates.RegisterHandlerResponses(botNameSetHandlerNameNotOk, notOkTemplates)
+	responseTemplates.RegisterHandlerResponses(
+		botNameSetHandlerName+handlerNotOkSuffix,
+		notOkTemplates,
+	)
+
+	BotNameSetHandler = createReplyHandler(
+		botNameSetHandlerName,
+		handleBotNameSet,
+	)
 }
 
-func HandleBotNameSet(
+func handleBotNameSet(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,
@@ -40,8 +53,14 @@ func HandleBotNameSet(
 
 	var tmpl *template.Template
 	if len(sentence.Tokens) > 1 {
-		tmpl = responseTemplates.GetRandomResponse(botNameSetHandlerNameNotOk)
+		tmpl = responseTemplates.GetRandomResponse(
+			botNameSetHandlerName + handlerNotOkSuffix,
+		)
 	} else {
+		dbSpan, _ := opentracing.StartSpanFromContext(
+			ctx,
+			"db-call",
+		)
 		globals := db.Collection(models.GlobalsCollectionKey)
 		bot := GetBotFromContext(ctx)
 		bot.Name = sentence.Text
@@ -59,9 +78,12 @@ func HandleBotNameSet(
 		if updateErr != nil || r.MatchedCount == 0 {
 			panic(updateErr)
 		}
+		dbSpan.Finish()
 
 		ctx = context.WithValue(ctx, BotContextKey, bot)
-		tmpl = responseTemplates.GetRandomResponse(botNameSetHandlerNameOk)
+		tmpl = responseTemplates.GetRandomResponse(
+			botNameSetHandlerName + handlerOkSuffix,
+		)
 	}
 
 	return execTemplateWithContext(ctx, tmpl)

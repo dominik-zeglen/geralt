@@ -9,6 +9,7 @@ import (
 	"github.com/dominik-zeglen/geralt/core/intents"
 	"github.com/dominik-zeglen/geralt/parser"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -45,46 +46,46 @@ func (c Core) Reply(ctx context.Context, text string) string {
 	user := handlers.GetUserFromContext(spanCtx)
 	intent, intentProb := intentProbs.Max()
 	if intentProb > intentThreshold && intent == intents.Back {
-		handler = handlers.HandleBack
+		handler = handlers.BackHandler
 	} else {
 		if user.FlowState.Current() != flow.Default.String() {
 			switch user.FlowState.Current() {
 			case flow.SettingBotName.String():
-				handler = handlers.HandleBotNameSet
+				handler = handlers.BotNameSetHandler
 			case flow.SettingSpeakerName.String():
-				handler = handlers.HandleSpeakerNameSet
+				handler = handlers.SpeakerNameSetHandler
 			}
 		} else {
 			if intentProb > intentThreshold {
 				switch intent {
 				case intents.Hello:
-					handler = handlers.HandleHello
+					handler = handlers.HelloHandler
 					break
 				case intents.Status:
-					handler = handlers.HandleStatus
+					handler = handlers.StatusHandler
 					break
 
 				case intents.GetSpeakerName:
-					handler = handlers.HandleGetSpeakerName
+					handler = handlers.GetSpeakerNameHandler
 					break
 
 				case intents.SetSpeakerName:
-					handler = handlers.HandleSetSpeakerName
+					handler = handlers.SetSpeakerNameHandler
 					break
 
 				case intents.GetBotName:
-					handler = handlers.HandleGetBotName
+					handler = handlers.GetBotNameHandler
 					break
 
 				case intents.SetBotName:
-					handler = handlers.HandleSetBotName
+					handler = handlers.SetBotNameHandler
 					break
 
 				default:
-					handler = handlers.HandleUnknown
+					handler = handlers.UnknownHandler
 				}
 			} else {
-				handler = handlers.HandleUnknown
+				handler = handlers.UnknownHandler
 			}
 		}
 	}
@@ -93,5 +94,15 @@ func (c Core) Reply(ctx context.Context, text string) string {
 		fmt.Printf("%s: %0.5f\n", intent, intentProb)
 	}
 
-	return handler(spanCtx, c.db, parsedText)
+	handlerSpan, handlerSpanCtx := opentracing.StartSpanFromContext(
+		spanCtx,
+		"handler",
+	)
+	handlerSpan.LogFields(
+		log.String("handler-name", handler.GetName()),
+	)
+	response := handler.Exec(handlerSpanCtx, c.db, parsedText)
+	handlerSpan.Finish()
+
+	return response
 }

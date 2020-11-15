@@ -9,6 +9,8 @@ import (
 
 const helloHandlerName = "hello"
 
+var HelloHandler ReplyHandler
+
 func init() {
 	templates := []string{
 		"Hi",
@@ -18,9 +20,14 @@ func init() {
 	}
 
 	responseTemplates.RegisterHandlerResponses(helloHandlerName, templates)
+
+	HelloHandler = createReplyHandler(
+		helloHandlerName,
+		handleHello,
+	)
 }
 
-func HandleHello(
+func handleHello(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,

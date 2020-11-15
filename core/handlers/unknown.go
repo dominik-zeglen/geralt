@@ -9,6 +9,8 @@ import (
 
 const unknownHandlerName = "unknown"
 
+var UnknownHandler ReplyHandler
+
 func init() {
 	templates := []string{
 		"I don't understand",
@@ -16,10 +18,13 @@ func init() {
 		"Sorry, I don't understand",
 		"I'm not sure what do you mean",
 	}
+
 	responseTemplates.RegisterHandlerResponses(unknownHandlerName, templates)
+
+	UnknownHandler = createReplyHandler(unknownHandlerName, handleUnknown)
 }
 
-func HandleUnknown(
+func handleUnknown(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,

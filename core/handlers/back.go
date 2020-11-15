@@ -10,6 +10,8 @@ import (
 
 const backHandlerName = "back"
 
+var BackHandler ReplyHandler
+
 func init() {
 	templates := []string{
 		"Ok",
@@ -18,9 +20,14 @@ func init() {
 	}
 
 	responseTemplates.RegisterHandlerResponses(backHandlerName, templates)
+
+	BackHandler = createReplyHandler(
+		backHandlerName,
+		handleBack,
+	)
 }
 
-func HandleBack(
+func handleBack(
 	ctx context.Context,
 	db *mongo.Database,
 	sentence parser.ParsedSentence,
